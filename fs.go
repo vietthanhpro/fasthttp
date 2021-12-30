@@ -7,7 +7,6 @@ import (
 	"html"
 	"io"
 	"io/ioutil"
-	"log"
 	"mime"
 	"net/http"
 	"os"
@@ -1257,10 +1256,8 @@ func (h *fsHandler) newFSFile(f *os.File, fileInfo os.FileInfo, compressed bool,
 	// detect content-type
 	ext := fileExtension(fileInfo.Name(), compressed, h.compressedFileSuffixes[fileEncoding])
 	contentType := mime.TypeByExtension(ext)
-	log.Println(ext)
-	log.Println(contentType)
 	if len(contentType) == 0 {
-		data, err := readFileHeader(f, compressed, fileEncoding)
+		data, err := readFileHeader(f, compressed, fileEncoding, ext)
 		if err != nil {
 			return nil, fmt.Errorf("cannot read header of the file %q: %w", f.Name(), err)
 		}
@@ -1282,7 +1279,7 @@ func (h *fsHandler) newFSFile(f *os.File, fileInfo os.FileInfo, compressed bool,
 	return ff, nil
 }
 
-func readFileHeader(f *os.File, compressed bool, fileEncoding string) ([]byte, error) {
+func readFileHeader(f *os.File, compressed bool, fileEncoding string, fileExt string) ([]byte, error) {
 	r := io.Reader(f)
 	var (
 		br *brotli.Reader
@@ -1311,12 +1308,14 @@ func readFileHeader(f *os.File, compressed bool, fileEncoding string) ([]byte, e
 	if _, err := f.Seek(0, 0); err != nil {
 		return nil, err
 	} else {
-		m := minify.New()
-		m.AddFunc("text/html", minifyhtml.Minify)
-		var err4 error
-		data, err4 = m.Bytes("text/html", data)
-		if err4 != nil {
-			return nil, err4
+		if fileExt == ".html" {
+			m := minify.New()
+			m.AddFunc("text/html", minifyhtml.Minify)
+			var err4 error
+			data, err4 = m.Bytes("text/html", data)
+			if err4 != nil {
+				return nil, err4
+			}
 		}
 	}
 
