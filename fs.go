@@ -18,6 +18,7 @@ import (
 
 	"github.com/andybalholm/brotli"
 	"github.com/klauspost/compress/gzip"
+	"github.com/tdewolff/minify"
 	"github.com/valyala/bytebufferpool"
 )
 
@@ -1305,6 +1306,14 @@ func readFileHeader(f *os.File, compressed bool, fileEncoding string) ([]byte, e
 	data, err := ioutil.ReadAll(lr)
 	if _, err := f.Seek(0, 0); err != nil {
 		return nil, err
+	} else {
+		m := minify.New()
+		m.AddFunc("text/html", html.Minify)
+		var err4 error
+		data, err4 = m.Bytes("text/html", data)
+		if err4 != nil {
+			return nil, err4
+		}
 	}
 
 	if br != nil {
