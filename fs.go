@@ -7,6 +7,7 @@ import (
 	"html"
 	"io"
 	"io/ioutil"
+	"log"
 	"mime"
 	"net/http"
 	"os"
@@ -1256,6 +1257,8 @@ func (h *fsHandler) newFSFile(f *os.File, fileInfo os.FileInfo, compressed bool,
 	// detect content-type
 	ext := fileExtension(fileInfo.Name(), compressed, h.compressedFileSuffixes[fileEncoding])
 	contentType := mime.TypeByExtension(ext)
+	log.Println(ext)
+	log.Println(contentType)
 	if len(contentType) == 0 {
 		data, err := readFileHeader(f, compressed, fileEncoding)
 		if err != nil {
